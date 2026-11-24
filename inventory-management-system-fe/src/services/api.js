@@ -57,6 +57,7 @@ const forceLogout = async () => {
   }
 
   localStorage.removeItem("user");
+  localStorage.removeItem("token");
   toast.error("Session expired. Please log in again.");
   window.location.replace("/login");
 };
@@ -79,12 +80,15 @@ const forceLogout = async () => {
  *   });
  */
 export const apiClient = async (endpoint, options = {}) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   // Merge default config with user-provided options
   const config = {
     ...options,
     credentials: "include", // Always send cookies (for auth)
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   };

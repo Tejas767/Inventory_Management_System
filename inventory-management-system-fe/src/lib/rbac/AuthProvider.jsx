@@ -60,6 +60,7 @@ export default function AuthProvider({ children }) {
     }
 
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setUser(null);
     setIsAuthenticated(false);
     toast.success("Logged out successfully");

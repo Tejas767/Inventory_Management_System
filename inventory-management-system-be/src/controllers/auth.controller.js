@@ -138,12 +138,13 @@ await prisma.user.update({
 });
 
 // 🍪 SEND COOKIES
+  const isHttps = req.secure || req.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
   const cookieOptions = {
-  httpOnly: true,                    // ✅ Uncomment this — security!
-  secure: true,                      // ✅ Always true (dev tunnel is HTTPS)
-  sameSite: "none",                  // ✅ Required for cross-origin cookies
-  path: "/"
-};
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: isHttps ? "none" : "lax",
+    path: "/"
+  };
 
     res.cookie("accessToken", token, {
       ...cookieOptions,

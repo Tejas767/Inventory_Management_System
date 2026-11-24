@@ -29,6 +29,9 @@ export default function LoginForm() {
 
     try {
       const data = await authService.login(formData);
+      if (data?.token) {
+        localStorage.setItem("token", data.token);
+      }
       localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Login successful");
       router.push("/dashboard");
