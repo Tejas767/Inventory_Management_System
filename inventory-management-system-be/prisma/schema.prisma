@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  password       String
+  role           Role      @default(USER)
+  createdAt      DateTime  @default(now())
+  resetOtp       String?
+  resetOtpExpiry DateTime?
+  refreshToken   String?
+}
+
+model Product {
+  id           String          @id @default(uuid())
+  name         String
+  serialNumber String          @unique
+  categoryId   String
+  quantity     Int             @default(0)
+  allocated    Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  minStock     Int             @default(0)
+  purchaseDate DateTime?
+  assets       EmployeeAsset[]
+  category     Category        @relation(fields: [categoryId], references: [id])
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Employee {
+  id          String          @id @default(uuid())
+  employeeId  String?         @unique
+  name        String
+  email       String          @unique
+  department  String
+  position    String
+  joiningDate DateTime
+  userId      Int?            @unique
+  createdAt   DateTime        @default(now())
+  employeeNo  Int             @unique @default(autoincrement())
+  assets      EmployeeAsset[]
+  queries     Query[]
+}
+
+model EmployeeAsset {
+  id            String   @id @default(uuid())
+  employeeId    String
+  productId     String
+  allocatedDate DateTime @default(now())
+  employee      Employee @relation(fields: [employeeId], references: [id])
+  product       Product  @relation(fields: [productId], references: [id])
+  queries       Query[]
+}
+
+model Query {
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  priority    Priority      @default(MEDIUM)
+  status      Status        @default(OPEN)
+  employeeId  String
+  assetId     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  asset       EmployeeAsset @relation(fields: [assetId], references: [id])
+  employee    Employee      @relation(fields: [employeeId], references: [id])
+}
+
+model BlacklistedToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Status {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  APPROVED
+  REJECTED
+}
