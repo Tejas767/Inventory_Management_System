@@ -3,7 +3,7 @@ const queryService = require("../services/query.service");
 // ---------------- CREATE QUERY ----------------
 const createQuery = async (req, res) => {
   try {
-    const result = await queryService.createQuery(req.body);
+    const result = await queryService.createQuery(req.body, req.user);
 
     return res.status(201).json({
       success: true,
@@ -29,7 +29,7 @@ const createQuery = async (req, res) => {
 // ---------------- GET ALL QUERIES ----------------
 const getAllQueries = async (req, res) => {
   try {
-    const result = await queryService.getAllQueries(req.query);
+    const result = await queryService.getAllQueries(req.query, req.user);
 
     return res.status(200).json({
       success: true,
@@ -54,7 +54,7 @@ const getAllQueries = async (req, res) => {
 // ---------------- GET QUERY BY ID ----------------
 const getQueryById = async (req, res) => {
   try {
-    const result = await queryService.getQueryById(req.params.id);
+    const result = await queryService.getQueryById(req.params.id, req.user);
 
     return res.status(200).json({
       success: true,

@@ -27,6 +27,8 @@ const {
 } = require("../controllers/category.controller");
 
 const router = express.Router();
+const { verifyToken } = require("../middlewares/auth.middleware");
+const isAdmin = require("../middlewares/isAdmin.middleware");
 
 /**
  * @swagger
@@ -62,7 +64,7 @@ const router = express.Router();
  *       400:
  *         description: Validation error
  */
-router.post("/", createCategory);
+router.post("/", verifyToken, isAdmin, createCategory);
 
 /**
  * @swagger
@@ -74,7 +76,7 @@ router.post("/", createCategory);
  *       200:
  *         description: List of categories
  */
-router.get("/", getCategories);
+router.get("/", verifyToken, getCategories);
 
 /**
  * @swagger
@@ -95,7 +97,7 @@ router.get("/", getCategories);
  *       404:
  *         description: Category not found
  */
-router.get("/:id", getCategoryById);
+router.get("/:id", verifyToken, getCategoryById);
 
 /**
  * @swagger
@@ -129,7 +131,7 @@ router.get("/:id", getCategoryById);
  *       404:
  *         description: Category not found
  */
-router.put("/:id", updateCategory);
+router.put("/:id", verifyToken, isAdmin, updateCategory);
 
 /**
  * @swagger
@@ -150,7 +152,7 @@ router.put("/:id", updateCategory);
  *       404:
  *         description: Category not found
  */
-router.delete("/:id", deleteCategory);
+router.delete("/:id", verifyToken, isAdmin, deleteCategory);
 
 module.exports = router;
 

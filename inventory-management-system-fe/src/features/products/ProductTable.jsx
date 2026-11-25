@@ -16,8 +16,9 @@ export default function ProductTable({
   loading = false,
   onEdit,
   onDelete,
+  canManage = false,
 }) {
-  const columns = [
+  const baseColumns = [
     {
       key: "name",
       label: "Product Name",
@@ -56,29 +57,35 @@ export default function ProductTable({
         />
       ),
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => onEdit(row)}
-            aria-label="Edit product"
-            className="p-1.5 rounded-md text-text-muted hover:text-accent hover:bg-accent-light transition-all duration-200"
-          >
-            <PencilSquareIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onDelete(row)}
-            aria-label="Delete product"
-            className="p-1.5 rounded-md text-text-muted hover:text-red-600 hover:bg-red-50 transition-all duration-200"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
-        </div>
-      ),
-    },
   ];
+
+  const columns = canManage
+    ? [
+        ...baseColumns,
+        {
+          key: "actions",
+          label: "Actions",
+          render: (row) => (
+            <div className="flex gap-2">
+              <button
+                onClick={() => onEdit(row)}
+                aria-label="Edit product"
+                className="p-1.5 rounded-md text-text-muted hover:text-accent hover:bg-accent-light transition-all duration-200"
+              >
+                <PencilSquareIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onDelete(row)}
+                aria-label="Delete product"
+                className="p-1.5 rounded-md text-text-muted hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ),
+        },
+      ]
+    : baseColumns;
 
   return (
     <div>
@@ -87,7 +94,9 @@ export default function ProductTable({
           All Products ({products.length})
         </h2>
         <p className="text-sm text-text-secondary mt-0.5">
-          Manage your inventory assets and track stock levels
+          {canManage
+            ? "Manage your inventory assets and track stock levels"
+            : "Browse available company hardware and stock levels"}
         </p>
       </div>
 

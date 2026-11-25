@@ -29,9 +29,14 @@ export default function UserMenu() {
         <span className="text-xs font-semibold text-accent-muted">{initials}</span>
       </div>
 
-      {/* Name */}
+      {/* Name & Role */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">{userName}</p>
+        <p className="text-sm font-medium text-white truncate">
+          {userName}
+          <span className="ml-1.5 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-white/10 text-accent-muted">
+            {user?.role || "USER"}
+          </span>
+        </p>
         <p className="text-xs text-sidebar-text truncate">{user?.email || "user"}</p>
       </div>
 

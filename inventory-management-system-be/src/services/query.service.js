@@ -1,5 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../config/prisma");
+const { findLinkedEmployee } = require("../utils/findLinkedEmployee");
 
 /**
  * Custom API Error Helper
@@ -13,14 +13,35 @@ class ApiError extends Error {
 }
 
 // ---------------- CREATE QUERY ----------------
-const createQuery = async (data) => {
-  const { title, description, priority, employeeId, assetId } = data;
+const createQuery = async (data, user) => {
+  const { title, description, priority, assetId } = data;
+  let { employeeId } = data;
 
-  if (!title || !description || !employeeId) {
+  if (user && user.role !== "ADMIN") {
+    const linked = await findLinkedEmployee(user);
+    if (!linked) {
+      throw new ApiError(
+        400,
+        "QRY_003",
+        "Your account is not linked to an employee profile yet. Contact an Admin."
+      );
+    }
+    employeeId = linked.id;
+
+    // Ensure the asset belongs to this employee
+    const ownedAsset = await prisma.employeeAsset.findFirst({
+      where: { id: assetId, employeeId: linked.id },
+    });
+    if (!ownedAsset) {
+      throw new ApiError(403, "QRY_403", "You can only report issues for your own assigned assets");
+    }
+  }
+
+  if (!title || !description || !employeeId || !assetId) {
     throw new ApiError(
       400,
       "QRY_001",
-      "Missing required fields (title, description, employeeId)"
+      "Missing required fields (title, description, employeeId, assetId)"
     );
   }
 
@@ -36,11 +57,21 @@ const createQuery = async (data) => {
 };
 
 // ---------------- GET ALL QUERIES ----------------
-const getAllQueries = async (filters) => {
+const getAllQueries = async (filters, user) => {
   const { status, priority, search } = filters;
+
+  let scopedEmployeeId;
+  if (user && user.role !== "ADMIN") {
+    const linked = await findLinkedEmployee(user);
+    if (!linked) {
+      return [];
+    }
+    scopedEmployeeId = linked.id;
+  }
 
   const queries = await prisma.query.findMany({
     where: {
+      employeeId: scopedEmployeeId || undefined,
       status: status || undefined,
       priority: priority || undefined,
       OR: search
@@ -70,11 +101,18 @@ const getAllQueries = async (filters) => {
 };
 
 // ---------------- GET QUERY BY ID ----------------
-const getQueryById = async (id) => {
+const getQueryById = async (id, user) => {
   const query = await prisma.query.findUnique({ where: { id } });
 
   if (!query) {
     throw new ApiError(404, "QRY_404", "Query not found");
+  }
+
+  if (user && user.role !== "ADMIN") {
+    const linked = await findLinkedEmployee(user);
+    if (!linked || query.employeeId !== linked.id) {
+      throw new ApiError(403, "QRY_403", "Access denied");
+    }
   }
 
   return query;

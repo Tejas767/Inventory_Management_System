@@ -8,6 +8,8 @@
 
 const router = require("express").Router();
 const controller = require("../controllers/employeeAsset.controller");
+const { verifyToken } = require("../middlewares/auth.middleware");
+const isAdmin = require("../middlewares/isAdmin.middleware");
 
 /**
  * @swagger
@@ -48,7 +50,7 @@ const controller = require("../controllers/employeeAsset.controller");
  *       400:
  *         description: Bad request
  */
-router.post("/", controller.allocateAsset);
+router.post("/", verifyToken, isAdmin, controller.allocateAsset);
 
 /**
  * @swagger
@@ -69,6 +71,6 @@ router.post("/", controller.allocateAsset);
  *       404:
  *         description: Allocation not found
  */
-router.delete("/:id", controller.deleteEmployeeAsset);
+router.delete("/:id", verifyToken, isAdmin, controller.deleteEmployeeAsset);
 
 module.exports = router;

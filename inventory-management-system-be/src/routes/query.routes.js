@@ -14,6 +14,8 @@
 const express = require("express");
 const router = express.Router();
 const queryController = require("../controllers/query.controller");
+const { verifyToken } = require("../middlewares/auth.middleware");
+const isAdmin = require("../middlewares/isAdmin.middleware");
 
 /**
  * @swagger
@@ -56,7 +58,7 @@ const queryController = require("../controllers/query.controller");
  *       400:
  *         description: Invalid input
  */
-router.post("/", queryController.createQuery);
+router.post("/", verifyToken, queryController.createQuery);
 
 /**
  * @swagger
@@ -68,7 +70,7 @@ router.post("/", queryController.createQuery);
  *       200:
  *         description: List of queries fetched successfully
  */
-router.get("/", queryController.getAllQueries);
+router.get("/", verifyToken, queryController.getAllQueries);
 
 /**
  * @swagger
@@ -89,7 +91,7 @@ router.get("/", queryController.getAllQueries);
  *       404:
  *         description: Query not found
  */
-router.get("/:id", queryController.getQueryById);
+router.get("/:id", verifyToken, queryController.getQueryById);
 
 /**
  * @swagger
@@ -124,7 +126,7 @@ router.get("/:id", queryController.getQueryById);
  *       404:
  *         description: Query not found
  */
-router.put("/:id", queryController.updateQuery);
+router.put("/:id", verifyToken, isAdmin, queryController.updateQuery);
 
 /**
  * @swagger
@@ -157,7 +159,7 @@ router.put("/:id", queryController.updateQuery);
  *       404:
  *         description: Query not found
  */
-router.patch("/:id/status", queryController.updateQueryStatus);
+router.patch("/:id/status", verifyToken, isAdmin, queryController.updateQueryStatus);
 
 /**
  * @swagger
@@ -178,7 +180,7 @@ router.patch("/:id/status", queryController.updateQueryStatus);
  *       404:
  *         description: Query not found
  */
-router.delete("/:id", queryController.deleteQuery);
+router.delete("/:id", verifyToken, isAdmin, queryController.deleteQuery);
 
 module.exports = router;
 

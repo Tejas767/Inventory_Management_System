@@ -10,6 +10,19 @@ import { apiClient } from "./api";
 
 export const employeeAssetService = {
   /**
+   * Fetch assets assigned to the currently logged-in user.
+   */
+  getMyAssets: async () => {
+    const res = await apiClient("/employees/me/assets", { method: "GET" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch your assets");
+    return {
+      assets: data.data || [],
+      linkedEmployee: data.linkedEmployee || null,
+    };
+  },
+
+  /**
    * Fetch all assets assigned to a specific employee.
    * @param {string} employeeId - Employee UUID
    */

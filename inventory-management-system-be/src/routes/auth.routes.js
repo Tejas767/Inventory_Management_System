@@ -73,6 +73,8 @@ const {
   verifyOtp,
   resetPassword,
   getMe,
+  updateMe,
+  changePassword,
   deleteMe,
   refreshToken,
   logout,
@@ -263,6 +265,8 @@ router.post("/reset-password", resetPassword);
  *         description: Unauthorized
  */
 router.get("/me", verifyToken, getMe);
+router.put("/me", verifyToken, updateMe);
+router.put("/change-password", verifyToken, changePassword);
 
 /**
  * @swagger

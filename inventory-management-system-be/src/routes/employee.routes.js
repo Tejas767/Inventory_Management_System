@@ -10,7 +10,7 @@
 // router.put("/:id", verifyToken, isAdmin, controller.update);
 // router.delete("/:id", verifyToken, isAdmin, controller.remove);
 
-// router.get("/:employeeId/assets", assetCtrl.getEmployeeAssets);
+// router.get("/:employeeId/assets", verifyToken, assetCtrl.getEmployeeAssets);
 
 
 
@@ -82,7 +82,10 @@ router.post("/", verifyToken, isAdmin, controller.create);
  *       403:
  *         description: Admin access required
  */
-router.get("/",  controller.getAll);
+router.get("/", verifyToken, isAdmin, controller.getAll);
+
+// Current logged-in user's assigned assets (must be before /:id)
+router.get("/me/assets", verifyToken, assetCtrl.getMyAssets);
 
 /**
  * @swagger
@@ -185,6 +188,6 @@ router.delete("/:id", verifyToken, isAdmin, controller.remove);
  *       404:
  *         description: Employee not found
  */
-router.get("/:employeeId/assets", assetCtrl.getEmployeeAssets);
+router.get("/:employeeId/assets", verifyToken, assetCtrl.getEmployeeAssets);
 
 module.exports = router;

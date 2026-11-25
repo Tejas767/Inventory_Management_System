@@ -15,9 +15,14 @@ import AddProductModal from "@/features/products/AddProductModal";
 import EditProductModal from "@/features/products/EditProductModal";
 import { productService } from "@/services/productService";
 import { categoryService } from "@/services/categoryService";
+import { useAuth } from "@/hooks/useAuth";
+import { ROLES } from "@/lib/constants/roles";
+import RoleGate from "@/lib/rbac/RoleGate";
 import toast from "react-hot-toast";
 
 export default function ProductsPage() {
+  const { role } = useAuth();
+  const isAdmin = role === ROLES.ADMIN;
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,12 +79,18 @@ export default function ProductsPage() {
     <section className="page-enter">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 page-enter-content">
         <PageHeader
-          title="Products"
-          description="Manage your inventory assets"
+          title={isAdmin ? "Products" : "Equipment Catalog"}
+          description={
+            isAdmin
+              ? "Manage your inventory assets"
+              : "Browse available company hardware and stock levels"
+          }
           action={
-            <Button icon={<Plus size={16} />} onClick={() => setShowAddModal(true)}>
-              Add Product
-            </Button>
+            <RoleGate allowedRoles={[ROLES.ADMIN]}>
+              <Button icon={<Plus size={16} />} onClick={() => setShowAddModal(true)}>
+                Add Product
+              </Button>
+            </RoleGate>
           }
         />
 
@@ -92,6 +103,7 @@ export default function ProductsPage() {
         <ProductTable
           products={filteredProducts}
           loading={loading}
+          canManage={isAdmin}
           onEdit={(p) => setEditingProduct({ ...p })}
           onDelete={(p) => setDeletingProduct(p)}
         />

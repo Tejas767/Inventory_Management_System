@@ -13,6 +13,7 @@ const employeeAssetRoutes = require("./routes/employeeAsset.routes.js");
 const categoryRoutes = require("./routes/category.routes.js");
 const queryRoutes = require("./routes/query.routes");
 const dashboardRoutes = require("./routes/dashboard.routes.js");
+const userRoutes = require("./routes/user.routes.js");
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use("/api/employee-assets", employeeAssetRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/queries", queryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/users", userRoutes);
 
 const PORT = process.env.PORT || 3000;
 

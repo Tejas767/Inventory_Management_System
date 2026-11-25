@@ -4,11 +4,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { generateOtp } = require("../utils/otp.js");
 const { sendOtpMail } = require("../utils/sendMail.js");
+const { findLinkedEmployee } = require("../utils/findLinkedEmployee.js");
 
 // -------------------- REGISTER ------------------------
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -29,14 +30,18 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Public signup always assigns USER role (Admins promote users internally)
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: role || "USER",
+        role: "USER",
       },
     });
+
+    // Auto-link with an existing Employee profile if email matches
+    await findLinkedEmployee({ id: user.id, email: user.email, role: user.role });
 
     return res.status(201).json({
       success: true,
@@ -339,12 +344,13 @@ exports.getMe = async (req, res) => {
     const userId = req.user.id; // comes from JWT(Middleware)
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },                       // find that id we get from jwt then we get name
+      where: { id: userId },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        createdAt: true,
       },
     });
 
@@ -355,14 +361,111 @@ exports.getMe = async (req, res) => {
       });
     }
 
+    const linkedEmployee = await findLinkedEmployee(user);
+
     res.json({
       success: true,
-      data: user,
+      data: {
+        ...user,
+        linkedEmployee: linkedEmployee
+          ? {
+              id: linkedEmployee.id,
+              employeeId: linkedEmployee.employeeId,
+              name: linkedEmployee.name,
+              department: linkedEmployee.department,
+              position: linkedEmployee.position,
+              joiningDate: linkedEmployee.joiningDate,
+            }
+          : null,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Failed to fetch user info",
+    });
+  }
+};
+
+// ---------------- UPDATE PROFILE ----------------
+exports.updateMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { name: name.trim() },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+    });
+  }
+};
+
+// ---------------- CHANGE PASSWORD ----------------
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current and new password are required",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 8 characters",
+      });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to change password",
     });
   }
 };
@@ -601,11 +704,14 @@ exports.refreshToken = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
-    const accessToken = req.cookies.accessToken;
- 
+    let accessToken = req.cookies?.accessToken;
+    if (!accessToken && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      accessToken = req.headers.authorization.split(" ")[1];
+    }
+
     // ✅ decode instead of verify — works even on expired tokens
-    const decoded = jwt.decode(accessToken);
- 
+    const decoded = accessToken ? jwt.decode(accessToken) : null;
+
     if (decoded) {
       try {
         await prisma.blacklistedToken.create({
@@ -617,20 +723,25 @@ exports.logout = async (req, res) => {
       } catch (e) {
         // Already blacklisted — ignore duplicate error
       }
- 
+
       await prisma.user.update({
         where: { id: decoded.id },
         data: { refreshToken: null },
       });
     }
- 
+
     // ✅ clearCookie must match the same options used when setting
-    const clearOptions = { httpOnly: true, secure: true, sameSite: "none", path: "/" };
+    const isHttps = req.secure || req.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
+    const clearOptions = {
+      httpOnly: true,
+      secure: isHttps,
+      sameSite: isHttps ? "none" : "lax",
+      path: "/",
+    };
     res.clearCookie("accessToken", clearOptions);
     res.clearCookie("refreshToken", clearOptions);
- 
+
     return res.json({ message: "Logged out successfully" });
- 
   } catch (error) {
     return res.status(400).json({ message: "Logout failed" });
   }

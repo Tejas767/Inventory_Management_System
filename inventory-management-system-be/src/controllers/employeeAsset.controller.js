@@ -1,10 +1,75 @@
 const prisma = require("../config/prisma");
+const { findLinkedEmployee } = require("../utils/findLinkedEmployee");
+
+/**
+ * GET assets allocated to the currently logged-in user
+ */
+exports.getMyAssets = async (req, res) => {
+  try {
+    const linkedEmployee = await findLinkedEmployee(req.user);
+
+    if (!linkedEmployee) {
+      return res.json({
+        success: true,
+        data: [],
+        linkedEmployee: null,
+      });
+    }
+
+    const assets = await prisma.employeeAsset.findMany({
+      where: { employeeId: linkedEmployee.id },
+      include: {
+        product: {
+          select: {
+            name: true,
+            serialNumber: true,
+            category: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { allocatedDate: "desc" },
+    });
+
+    res.json({
+      success: true,
+      linkedEmployee: {
+        id: linkedEmployee.id,
+        employeeId: linkedEmployee.employeeId,
+        name: linkedEmployee.name,
+        department: linkedEmployee.department,
+        position: linkedEmployee.position,
+      },
+      data: assets.map((a) => ({
+        assignmentId: a.id,
+        assetName: a.product.name,
+        category: a.product.category.name,
+        serialNumber: a.product.serialNumber,
+        allocatedDate: a.allocatedDate,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch your assets",
+    });
+  }
+};
 
 /**
  * GET assets allocated to one employee ( Eye button)
  */
 exports.getEmployeeAssets = async (req, res) => {
   const { employeeId } = req.params;
+
+  if (req.user && req.user.role !== "ADMIN") {
+    const linked = await findLinkedEmployee(req.user);
+    if (!linked || linked.id !== employeeId) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+  }
 
   const assets = await prisma.employeeAsset.findMany({
     where: { employeeId },

@@ -1,24 +1,40 @@
 /**
  * ============================================================
- * NAV LINKS — Sidebar navigation items
+ * NAV LINKS — Role-aware Sidebar navigation items
  * ============================================================
- *
- * Vertical sidebar links with indigo active pill and icon + label.
- * Used in both desktop sidebar and mobile slide-out menu.
  */
 
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Box, Users, MessageSquare } from "lucide-react";
+import {
+  LayoutGrid,
+  Box,
+  Users,
+  MessageSquare,
+  Laptop,
+  ShieldCheck,
+  UserCircle,
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { ROLES } from "@/lib/constants/roles";
 
-// Navigation items — add new routes here
-const NAV_ITEMS = [
+const ADMIN_NAV_ITEMS = [
   { name: "Dashboard", icon: LayoutGrid, href: "/dashboard" },
   { name: "Products", icon: Box, href: "/products" },
   { name: "Employees", icon: Users, href: "/employees" },
   { name: "Queries", icon: MessageSquare, href: "/queries" },
+  { name: "Users & Roles", icon: ShieldCheck, href: "/users" },
+  { name: "My Profile", icon: UserCircle, href: "/profile" },
+];
+
+const USER_NAV_ITEMS = [
+  { name: "Dashboard", icon: LayoutGrid, href: "/dashboard" },
+  { name: "My Assets", icon: Laptop, href: "/my-assets" },
+  { name: "Equipment Catalog", icon: Box, href: "/products" },
+  { name: "My Queries", icon: MessageSquare, href: "/queries" },
+  { name: "My Profile", icon: UserCircle, href: "/profile" },
 ];
 
 /**
@@ -26,10 +42,13 @@ const NAV_ITEMS = [
  */
 export function SidebarNavLinks({ onLinkClick }) {
   const pathname = usePathname();
+  const { role } = useAuth();
+
+  const navItems = role === ROLES.ADMIN ? ADMIN_NAV_ITEMS : USER_NAV_ITEMS;
 
   return (
     <>
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const Icon = item.icon;
         const isActive =
           pathname === item.href || pathname.startsWith(`${item.href}/`);

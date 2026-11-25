@@ -11,6 +11,8 @@
  *   const data = await authService.login({ email, password });
  */
 
+import { apiClient } from "./api";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const authService = {
@@ -27,7 +29,11 @@ export const authService = {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Invalid credentials");
+    if (!res.ok) {
+      throw new Error(
+        data?.error?.message || data?.message || "Invalid credentials"
+      );
+    }
 
     return data.data; // { user, token }
   },
@@ -107,6 +113,42 @@ export const authService = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to reset password");
 
+    return data;
+  },
+
+  /**
+   * Get current user profile + linked employee details.
+   */
+  getMe: async () => {
+    const res = await apiClient("/auth/me", { method: "GET" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch profile");
+    return data.data;
+  },
+
+  /**
+   * Update current user's name.
+   */
+  updateProfile: async (name) => {
+    const res = await apiClient("/auth/me", {
+      method: "PUT",
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to update profile");
+    return data.data;
+  },
+
+  /**
+   * Change current user's password.
+   */
+  changePassword: async ({ currentPassword, newPassword }) => {
+    const res = await apiClient("/auth/change-password", {
+      method: "PUT",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to change password");
     return data;
   },
 };

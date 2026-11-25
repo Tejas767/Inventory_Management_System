@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/lib/schemas/registerSchema";
 import { authService } from "@/services/authService";
-import { Lock, Mail, User, Shield, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, User, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -79,20 +79,6 @@ export default function RegisterForm() {
                 <input type="email" placeholder="Enter your email" {...register("email")} className={inputClass} />
               </div>
               {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email.message}</p>}
-            </div>
-
-            {/* Role */}
-            <div className="animate-fadeIn stagger-5">
-              <label className="block text-sm font-medium text-text-primary mb-1.5">Role</label>
-              <div className="relative group">
-                <Shield size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-accent transition-colors" />
-                <select {...register("role")} defaultValue="" className={`${inputClass} bg-surface`}>
-                  <option value="" disabled>Select Role</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="USER">User</option>
-                </select>
-              </div>
-              {errors.role && <p className="text-red-500 text-xs mt-1.5">{errors.role.message}</p>}
             </div>
 
             {/* Password */}

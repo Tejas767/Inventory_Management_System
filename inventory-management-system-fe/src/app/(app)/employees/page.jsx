@@ -5,7 +5,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import Link from "next/link";
+import { Plus, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchBar from "@/components/ui/SearchBar";
 import Button from "@/components/ui/Button";
@@ -15,9 +16,14 @@ import AllocateAssetModal from "@/features/employees/AllocateAssetModal";
 import ViewAssetsModal from "@/features/employees/ViewAssetsModal";
 import { employeeService } from "@/services/employeeService";
 import { formatDate } from "@/utils/helpers";
+import { useAuth } from "@/hooks/useAuth";
+import { ROLES } from "@/lib/constants/roles";
 import toast from "react-hot-toast";
 
 export default function EmployeesPage() {
+  const { role } = useAuth();
+  const isAdmin = role === ROLES.ADMIN;
+
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,6 +33,7 @@ export default function EmployeesPage() {
   const [allocateEmployee, setAllocateEmployee] = useState(null);
 
   const fetchEmployees = async () => {
+    if (!isAdmin) return;
     try {
       setLoading(true);
       const data = await employeeService.getEmployees();
@@ -52,7 +59,32 @@ export default function EmployeesPage() {
     }
   };
 
-  useEffect(() => { fetchEmployees(); }, []);
+  useEffect(() => {
+    if (isAdmin) {
+      fetchEmployees();
+    } else {
+      setLoading(false);
+    }
+  }, [isAdmin]);
+
+  if (!isAdmin) {
+    return (
+      <section className="page-enter">
+        <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-red-50 flex items-center justify-center">
+            <ShieldAlert className="w-7 h-7 text-red-600" />
+          </div>
+          <h1 className="text-xl font-bold text-text-primary">Admin Access Required</h1>
+          <p className="text-sm text-text-secondary">
+            Only administrators can view the employee directory and allocate company assets.
+          </p>
+          <Link href="/dashboard" className="inline-block">
+            <Button>Back to Dashboard</Button>
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   const filteredEmployees = employees.filter((emp) =>
     `${emp.employeeId} ${emp.name} ${emp.email} ${emp.department} ${emp.position}`

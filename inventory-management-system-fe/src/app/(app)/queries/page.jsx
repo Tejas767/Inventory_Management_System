@@ -13,8 +13,13 @@ import QueryList from "@/features/queries/QueryList";
 import AddQueryModal from "@/features/queries/AddQueryModal";
 import { queryService } from "@/services/queryService";
 import { toQueryStatusEnum } from "@/utils/helpers";
+import { useAuth } from "@/hooks/useAuth";
+import { ROLES } from "@/lib/constants/roles";
 
 export default function QueriesPage() {
+  const { role } = useAuth();
+  const isAdmin = role === ROLES.ADMIN;
+
   const [queries, setQueries] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("Open");
@@ -53,8 +58,12 @@ export default function QueriesPage() {
     <section className="page-enter">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 page-enter-content">
         <PageHeader
-          title="Queries"
-          description="Manage asset repair requests and employee queries"
+          title={isAdmin ? "Queries" : "My Queries"}
+          description={
+            isAdmin
+              ? "Manage and resolve all employee asset repair requests"
+              : "Submit and track repair requests for your assigned assets"
+          }
           action={
             <Button icon={<Plus size={16} />} onClick={() => setShowAddModal(true)}>
               Add Query

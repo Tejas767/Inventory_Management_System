@@ -9,6 +9,8 @@
 import { Clock } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Button from "@/components/ui/Button";
+import RoleGate from "@/lib/rbac/RoleGate";
+import { ROLES } from "@/lib/constants/roles";
 import {
   getPriorityClasses,
   getQueryStatusClasses,
@@ -66,35 +68,37 @@ export default function QueryCard({ query, onUpdateStatus }) {
           <div className="flex justify-between items-center mt-4 pt-3 border-t border-border-light">
             <span className="text-xs text-text-muted">Created: {query.date}</span>
 
-            <div className="flex gap-2">
-              {query.status === "OPEN" && (
-                <Button
-                  variant="secondary"
-                  onClick={() => onUpdateStatus(query.id, "In Progress")}
-                  className="text-xs px-3 py-1.5"
-                >
-                  Start Progress
-                </Button>
-              )}
-              {query.status === "IN_PROGRESS" && (
-                <Button
-                  variant="secondary"
-                  onClick={() => onUpdateStatus(query.id, "Closed")}
-                  className="text-xs px-3 py-1.5"
-                >
-                  Mark Resolved
-                </Button>
-              )}
-              {query.status !== "CLOSED" && (
-                <Button
-                  variant="ghost"
-                  onClick={() => onUpdateStatus(query.id, "Closed")}
-                  className="text-xs px-3 py-1.5"
-                >
-                  Close
-                </Button>
-              )}
-            </div>
+            <RoleGate allowedRoles={[ROLES.ADMIN]}>
+              <div className="flex gap-2">
+                {query.status === "OPEN" && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => onUpdateStatus(query.id, "In Progress")}
+                    className="text-xs px-3 py-1.5"
+                  >
+                    Start Progress
+                  </Button>
+                )}
+                {query.status === "IN_PROGRESS" && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => onUpdateStatus(query.id, "Closed")}
+                    className="text-xs px-3 py-1.5"
+                  >
+                    Mark Resolved
+                  </Button>
+                )}
+                {query.status !== "CLOSED" && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => onUpdateStatus(query.id, "Closed")}
+                    className="text-xs px-3 py-1.5"
+                  >
+                    Close
+                  </Button>
+                )}
+              </div>
+            </RoleGate>
           </div>
         </div>
       </div>

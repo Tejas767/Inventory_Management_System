@@ -67,6 +67,15 @@ export default function AuthProvider({ children }) {
     router.push("/login");
   }, [router]);
 
+  // --- Update user helper (e.g. after profile edit) ---
+  const updateUser = useCallback((updates) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...updates };
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   // --- Context value ---
   // The `role` is extracted from the user object for convenience.
   // Your backend already returns role in the user data.
@@ -75,6 +84,7 @@ export default function AuthProvider({ children }) {
     role: user?.role || null,
     isAuthenticated,
     logout,
+    updateUser,
   };
 
   return (

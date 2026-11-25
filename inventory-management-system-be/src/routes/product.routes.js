@@ -16,6 +16,8 @@
 const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/product.controller");
+const { verifyToken } = require("../middlewares/auth.middleware");
+const isAdmin = require("../middlewares/isAdmin.middleware");
 
 /**
  * @swagger
@@ -61,7 +63,7 @@ const productController = require("../controllers/product.controller");
  *       400:
  *         description: Invalid input
  */
-router.post("/", productController.createProduct);
+router.post("/", verifyToken, isAdmin, productController.createProduct);
 
 /**
  * @swagger
@@ -73,7 +75,7 @@ router.post("/", productController.createProduct);
  *       200:
  *         description: Successfully fetched product list
  */
-router.get("/", productController.getProducts);
+router.get("/", verifyToken, productController.getProducts);
 
 /**
  * @swagger
@@ -110,7 +112,7 @@ router.get("/", productController.getProducts);
  *       404:
  *         description: Product not found
  */
-router.put("/:id", productController.updateProduct);
+router.put("/:id", verifyToken, isAdmin, productController.updateProduct);
 
 /**
  * @swagger
@@ -131,7 +133,7 @@ router.put("/:id", productController.updateProduct);
  *       404:
  *         description: Product not found
  */
-router.delete("/:id", productController.deleteProduct);
+router.delete("/:id", verifyToken, isAdmin, productController.deleteProduct);
 
 module.exports = router;
 
