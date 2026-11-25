@@ -37,6 +37,7 @@ export default function UsersManagementPage() {
   const [savingLink, setSavingLink] = useState(false);
 
   const [deletingUser, setDeletingUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = async () => {
     if (!isAdmin) return;
@@ -117,14 +118,19 @@ export default function UsersManagementPage() {
   };
 
   const handleDeleteUser = async () => {
-    if (!deletingUser) return;
+    if (!deletingUser || isDeleting) return;
     try {
+      setIsDeleting(true);
       await userService.deleteUser(deletingUser.id);
       toast.success("User removed");
       setDeletingUser(null);
       loadData();
     } catch (err) {
       toast.error(err.message || "Failed to delete user");
+      setDeletingUser(null);
+      loadData();
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -325,8 +331,9 @@ export default function UsersManagementPage() {
 
         <ConfirmDialog
           isOpen={!!deletingUser}
-          onClose={() => setDeletingUser(null)}
+          onClose={() => !isDeleting && setDeletingUser(null)}
           onConfirm={handleDeleteUser}
+          loading={isDeleting}
           title="Delete User Account?"
           message={`Are you sure you want to remove ${deletingUser?.email}? Their linked employee record will remain intact.`}
           confirmLabel="Delete"

@@ -71,11 +71,20 @@ exports.updateUserRole = async (req, res) => {
       });
     }
 
+    if (Number.isNaN(targetId)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+
     if (targetId === req.user.id && role !== "ADMIN") {
       return res.status(400).json({
         success: false,
         message: "You cannot demote your own Admin account",
       });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { id: targetId } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     const updated = await prisma.user.update({
@@ -184,10 +193,22 @@ exports.deleteUser = async (req, res) => {
   try {
     const targetId = Number(req.params.id);
 
+    if (Number.isNaN(targetId)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+
     if (targetId === req.user.id) {
       return res.status(400).json({
         success: false,
         message: "You cannot delete your own active Admin account",
+      });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { id: targetId } });
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: "User already deleted or not found",
       });
     }
 
@@ -196,7 +217,7 @@ exports.deleteUser = async (req, res) => {
       data: { userId: null },
     });
 
-    await prisma.user.delete({ where: { id: targetId } });
+    await prisma.user.deleteMany({ where: { id: targetId } });
 
     return res.status(200).json({
       success: true,
@@ -205,7 +226,7 @@ exports.deleteUser = async (req, res) => {
   } catch (error) {
     return res.status(400).json({
       success: false,
-      message: error.message || "Failed to delete user",
+      message: "Failed to delete user",
     });
   }
 };

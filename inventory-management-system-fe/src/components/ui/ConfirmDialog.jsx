@@ -27,6 +27,7 @@ export default function ConfirmDialog({
   message = "This action cannot be undone.",
   confirmLabel = "Confirm",
   variant = "danger",
+  loading = false,
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-sm">
@@ -46,10 +47,10 @@ export default function ConfirmDialog({
         <p className="text-sm text-text-secondary mt-2 mb-6">{message}</p>
 
         <div className="flex gap-3 w-full">
-          <Button variant="secondary" onClick={onClose} className="flex-1">
+          <Button variant="secondary" onClick={onClose} disabled={loading} className="flex-1">
             Cancel
           </Button>
-          <Button variant={variant} onClick={onConfirm} className="flex-1">
+          <Button variant={variant} onClick={onConfirm} loading={loading} className="flex-1">
             {confirmLabel}
           </Button>
         </div>
